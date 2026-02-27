@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Transcriber</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #e0f0ff, #ffffff);
+    }
+
+    .container {
+      text-align: center;
+      background: #ffffff;
+      padding: 40px 60px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      color: #1a73e8;
+      font-size: 28px;
+    }
+
+    input[type="file"] {
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 20px; /* расстояние между кнопками */
+      margin-top: 20px;
+    }
+
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #155ab6;
+      transform: translateY(-2px);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    #downloadBtn.active {
+      background-color: #28a745; /* зеленый когда готов */
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Audio Transcriber</h1>
+    <input type="file" id="audioInput" accept="audio/*" />
+    
+    <div class="button-group">
+      <button id="uploadBtn">Загрузить и транскрибировать</button>
+      <button id="downloadBtn" disabled>Скачать готовый файл</button>
+    </div>
+  </div>
+  <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
+  <script>
+    const uploadBtn = document.getElementById('uploadBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const audioInput = document.getElementById('audioInput');
+
+    let resultFilename = null;
+    let resultBucket = null;
+
+    const socket = io("http://192.168.0.63:8000/", {
+      transports: ['websocket']
+    });
+
+    // 🔔 Событие от сервера
+    socket.on('transcribe_done', (data) => {
+      // ожидаем что сервер присылает:
+      // { filename: "...", bucket_name: "..." }
+
+      resultFilename = data.filename;
+      resultBucket = data.bucket_name;
+
+      downloadBtn.disabled = false;
+      downloadBtn.classList.add('active');
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!audioInput.files.length) {
+        alert('Выберите аудиофайл!');
+        return;
+      }
+
+      const file = audioInput.files[0];
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch(
+          'http://192.168.0.63:8000/transcription/transcribe',
+          {
+            method: 'POST',
+            body: formData
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Ошибка сервера');
+        }
+
+        alert('Файл загружен. Ожидаем готовую транскрипцию...');
+      } catch (err) {
+        console.error(err);
+        alert('Произошла ошибка при загрузке или транскрибации');
+      }
+    });
+
+    downloadBtn.addEventListener('click', async () => {
+      if (downloadBtn.disabled || !resultFilename || !resultBucket) return;
+
+      try {
+        const response = await fetch(
+          `http://192.168.0.63:8000/transcription/get_result` +
+          `?filename=${encodeURIComponent(resultFilename)}` +
+          `&bucket_name=${encodeURIComponent(resultBucket)}`,
+          {
+            method: 'GET'
+          }
+        );
+
+        if (!response.ok) throw new Error('Ошибка сервера');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = resultFilename; // имя из события
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+
+        downloadBtn.disabled = true;
+        downloadBtn.classList.remove('active');
+
+      } catch (err) {
+        console.error(err);
+        alert('Ошибка при получении файла');
+      }
+    });
+  </script>
+</body>
+</html>

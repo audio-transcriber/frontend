@@ -95,7 +95,8 @@
     let resultFilename = null;
     let resultBucket = null;
 
-    const socket = io("http://192.168.0.63:8000/", {
+    const socket = io("http://192.168.0.63:80/", {
+      path: '/api/socket.io',
       transports: ['websocket']
     });
 
@@ -124,7 +125,7 @@
 
       try {
         const response = await fetch(
-          'http://192.168.0.63:8000/transcription/transcribe',
+          'http://192.168.0.63:80/api/transcription/transcribe',
           {
             method: 'POST',
             body: formData
@@ -147,7 +148,7 @@
 
       try {
         const response = await fetch(
-          `http://192.168.0.63:8000/transcription/get_result` +
+          `http://192.168.0.63:80/api/transcription/get_result` +
           `?filename=${encodeURIComponent(resultFilename)}` +
           `&bucket_name=${encodeURIComponent(resultBucket)}`,
           {

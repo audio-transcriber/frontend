@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>Audio Transcriber</title>
+
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-family: "Inter", "Segoe UI", sans-serif;
     }
 
     body {
@@ -16,81 +17,189 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: linear-gradient(135deg, #e0f0ff, #ffffff);
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      animation: gradientShift 10s ease infinite alternate;
+    }
+
+    @keyframes gradientShift {
+      from { filter: hue-rotate(0deg); }
+      to { filter: hue-rotate(20deg); }
     }
 
     .container {
       text-align: center;
-      background: #ffffff;
-      padding: 40px 60px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 50px 60px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      backdrop-filter: blur(10px);
+      width: 420px;
+      transition: transform 0.3s ease;
+    }
+
+    .container:hover {
+      transform: translateY(-6px);
     }
 
     h1 {
-      margin-bottom: 30px;
-      color: #1a73e8;
-      font-size: 28px;
+      margin-bottom: 10px;
+      font-size: 30px;
+      color: #333;
     }
 
-    input[type="file"] {
-      margin-bottom: 20px;
-      font-size: 16px;
+    .subtitle {
+      font-size: 14px;
+      color: #777;
+      margin-bottom: 30px;
     }
+
+    /* ===== FILE UPLOAD ===== */
+
+    .file-upload {
+      margin-bottom: 25px;
+    }
+
+    .file-upload input[type="file"] {
+      display: none;
+    }
+
+    .file-label {
+      display: inline-block;
+      padding: 14px 26px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      color: #333;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+
+    .file-label:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 20px rgba(0,0,0,0.25);
+    }
+
+    .file-label:active {
+      transform: translateY(0);
+    }
+
+    .file-name {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #666;
+      word-break: break-word;
+      min-height: 18px;
+    }
+
+    /* ===== BUTTONS ===== */
 
     .button-group {
       display: flex;
       justify-content: center;
-      gap: 20px; /* расстояние между кнопками */
+      gap: 15px;
       margin-top: 20px;
     }
 
     button {
-      background-color: #1a73e8;
-      color: white;
       border: none;
-      padding: 14px 32px;
-      border-radius: 8px;
-      font-size: 16px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 15px;
       cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
+      transition: all 0.3s ease;
+      font-weight: 600;
     }
 
-    button:hover:not(:disabled) {
-      background-color: #155ab6;
-      transform: translateY(-2px);
+    #uploadBtn {
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: white;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.15);
     }
 
-    button:active:not(:disabled) {
-      transform: translateY(0);
+    #uploadBtn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 20px rgba(0,0,0,0.25);
     }
 
-    button:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
+    #downloadBtn {
+      background-color: #ddd;
+      color: #666;
     }
 
     #downloadBtn.active {
-      background-color: #28a745; /* зеленый когда готов */
-      cursor: pointer;
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      color: white;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+
+    #downloadBtn.active:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 20px rgba(0,0,0,0.25);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    /* ===== STATUS ===== */
+
+    .status {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #555;
+      min-height: 20px;
+    }
+
+    .status.loading {
+      color: #ff9800;
+      animation: pulse 1.2s infinite;
+    }
+
+    .status.ready {
+      color: #28a745;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
-    <h1>Audio Transcriber</h1>
-    <input type="file" id="audioInput" accept="audio/*" />
-    
-    <div class="button-group">
-      <button id="uploadBtn">Загрузить и транскрибировать</button>
-      <button id="downloadBtn" disabled>Скачать готовый файл</button>
+    <h1>🎧 Audio Transcriber</h1>
+    <div class="subtitle">Загрузите аудио — получите текст за секунды</div>
+
+    <!-- FILE UPLOAD -->
+    <div class="file-upload">
+      <input type="file" id="audioInput" accept="audio/*" />
+      <label for="audioInput" class="file-label">
+        📁 Выбрать аудиофайл
+      </label>
+      <div class="file-name" id="fileName">Файл не выбран</div>
     </div>
+
+    <!-- BUTTONS -->
+    <div class="button-group">
+      <button id="uploadBtn">🚀 Транскрибировать</button>
+      <button id="downloadBtn" disabled>⬇ Скачать</button>
+    </div>
+
+    <div class="status" id="statusText"></div>
   </div>
+
   <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
+
   <script>
     const uploadBtn = document.getElementById('uploadBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const audioInput = document.getElementById('audioInput');
+    const statusText = document.getElementById('statusText');
+    const fileName = document.getElementById('fileName');
 
     let resultFilename = null;
     let resultBucket = null;
@@ -100,16 +209,25 @@
       transports: ['websocket']
     });
 
-    // 🔔 Событие от сервера
-    socket.on('transcribe_done', (data) => {
-      // ожидаем что сервер присылает:
-      // { filename: "...", bucket_name: "..." }
+    // Показываем имя файла
+    audioInput.addEventListener('change', () => {
+      if (audioInput.files.length > 0) {
+        fileName.textContent = "🎵 " + audioInput.files[0].name;
+      } else {
+        fileName.textContent = "Файл не выбран";
+      }
+    });
 
+    socket.on('transcribe_done', (data) => {
       resultFilename = data.filename;
       resultBucket = data.bucket_name;
 
       downloadBtn.disabled = false;
       downloadBtn.classList.add('active');
+
+      statusText.textContent = "✅ Транскрипция готова!";
+      statusText.classList.remove('loading');
+      statusText.classList.add('ready');
     });
 
     uploadBtn.addEventListener('click', async () => {
@@ -118,8 +236,11 @@
         return;
       }
 
-      const file = audioInput.files[0];
+      statusText.textContent = "⏳ Обработка аудио...";
+      statusText.classList.add('loading');
+      statusText.classList.remove('ready');
 
+      const file = audioInput.files[0];
       const formData = new FormData();
       formData.append('file', file);
 
@@ -136,10 +257,10 @@
           throw new Error('Ошибка сервера');
         }
 
-        alert('Файл загружен. Ожидаем готовую транскрипцию...');
       } catch (err) {
         console.error(err);
-        alert('Произошла ошибка при загрузке или транскрибации');
+        statusText.textContent = "❌ Ошибка загрузки";
+        statusText.classList.remove('loading');
       }
     });
 
@@ -151,9 +272,7 @@
           `https://audio-transcriber.ru/api/transcription/get_result` +
           `?filename=${encodeURIComponent(resultFilename)}` +
           `&bucket_name=${encodeURIComponent(resultBucket)}`,
-          {
-            method: 'GET'
-          }
+          { method: 'GET' }
         );
 
         if (!response.ok) throw new Error('Ошибка сервера');
@@ -163,7 +282,7 @@
 
         const a = document.createElement('a');
         a.href = url;
-        a.download = resultFilename; // имя из события
+        a.download = resultFilename;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -172,6 +291,8 @@
 
         downloadBtn.disabled = true;
         downloadBtn.classList.remove('active');
+        statusText.textContent = "✨ Готово! Можно загрузить новый файл.";
+        statusText.classList.remove('ready');
 
       } catch (err) {
         console.error(err);

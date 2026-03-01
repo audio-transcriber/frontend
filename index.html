@@ -95,7 +95,7 @@
     let resultFilename = null;
     let resultBucket = null;
 
-    const socket = io("http://audio-transcriber.ru/", {
+    const socket = io("https://audio-transcriber.ru/", {
       path: '/api/socket.io',
       transports: ['websocket']
     });
@@ -125,7 +125,7 @@
 
       try {
         const response = await fetch(
-          'http://audio-transcriber.ru/api/transcription/transcribe',
+          'https://audio-transcriber.ru/api/transcription/transcribe',
           {
             method: 'POST',
             body: formData
@@ -148,7 +148,7 @@
 
       try {
         const response = await fetch(
-          `http://audio-transcriber.ru/api/transcription/get_result` +
+          `https://audio-transcriber.ru/api/transcription/get_result` +
           `?filename=${encodeURIComponent(resultFilename)}` +
           `&bucket_name=${encodeURIComponent(resultBucket)}`,
           {

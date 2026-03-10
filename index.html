@@ -205,7 +205,7 @@
     let resultBucket = null;
 
     const socket = io("https://audio-transcriber.ru/", {
-      path: '/api/socket.io',
+      path: '/ws',
       transports: ['websocket']
     });
 

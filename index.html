@@ -243,6 +243,7 @@
       const file = audioInput.files[0];
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('sid', socket.id);
 
       try {
         const response = await fetch(
